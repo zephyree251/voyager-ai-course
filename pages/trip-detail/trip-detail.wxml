@@ -81,10 +81,12 @@
     <!-- ========== 行程预览 ========== -->
     <view class="section animate-fade-in">
       <view class="section-header">
-        <text class="section-title">📋 每日行程</text>
-        <text class="section-more" bindtap="viewFullItinerary" wx:if="{{trip.itinerary.length > 0}}">查看全部 ›</text>
+        <text class="section-title">📋 每日行程<text wx:if="{{tripPreviewDays.length}}">（{{tripPreviewDays.length}} 天）</text></text>
+        <text class="section-more" bindtap="viewFullItinerary" wx:if="{{tripPreviewDays.length}}">逐日查看 ›</text>
       </view>
       <view wx:if="{{trip.itinerary.length > 0}}">
+        <text wx:if="{{trip.itinerarySource === 'ai'}}" class="font-xs text-secondary">AI 生成 · 请核实营业和预约信息</text>
+        <text wx:elif="{{trip.itinerarySource === 'local'}}" class="font-xs text-secondary">本地模板</text>
         <view wx:for="{{tripPreviewDays}}" wx:key="day">
           <view class="day-plan-wrap" bindtap="goToDayPlan" data-index="{{index}}">
             <view class="day-header flex-between mb-sm">
@@ -132,7 +134,7 @@
     <!-- ========== AI 小贴士 ========== -->
     <view class="section animate-fade-in">
       <view class="section-header">
-        <text class="section-title">🤖 AI 旅行贴士</text>
+        <text class="section-title">旅行贴士</text>
       </view>
       <view class="card" wx:for="{{aiTips}}" wx:key="index" style="padding: 24rpx; margin-bottom: 12rpx;">
         <view class="flex-row align-start" style="gap: 12rpx;">

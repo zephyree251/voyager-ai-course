@@ -1,8 +1,25 @@
 {
   "description": "AI 旅行计划助手 - 智能规划你的每一次旅行",
   "packOptions": {
-    "ignore": [],
-    "include": "ALL"
+    "ignore": [
+      {
+        "value": "server",
+        "type": "folder"
+      },
+      {
+        "value": "tests",
+        "type": "folder"
+      },
+      {
+        "value": "docs",
+        "type": "folder"
+      },
+      {
+        "value": ".env",
+        "type": "suffix"
+      }
+    ],
+    "include": []
   },
   "setting": {
     "bundle": false,
@@ -31,16 +48,21 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "useCompilerPlugins": false
+    "useCompilerPlugins": false,
+    "compileWorklet": false,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false
   },
   "compileType": "miniprogram",
   "libVersion": "3.3.4",
-  "appid": "wx0000000000000000",
+  "appid": "wxc77a103b74f0a82b",
   "projectname": "voyager-ai",
   "version": "1.15.0",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
-  }
+  },
+  "simulatorPluginLibVersion": {}
 }

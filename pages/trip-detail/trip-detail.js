@@ -32,7 +32,7 @@ Page({
     placesCount: 0,
     foodCount: 0,
 
-    // 行程预览（最多3天）
+    // 每天的行程预览
     tripPreviewDays: [],
 
     // 最新日记
@@ -106,8 +106,8 @@ Page({
       const places = (trip.places || []).length
       const foods = (trip.foods || []).length
 
-      // 行程预览（前3天）
-      const previewDays = (trip.itinerary || []).slice(0, 3).map((day, idx) => ({
+      // 列出所有日期，每天预览前四项活动
+      const previewDays = (trip.itinerary || []).map((day, idx) => ({
         day: day.day || (idx + 1),
         date: day.date || '',
         title: day.title || `第${idx + 1}天`,

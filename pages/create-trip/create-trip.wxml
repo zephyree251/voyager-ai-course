@@ -125,7 +125,7 @@
       <view class="input-wrap">
         <textarea
           class="form-textarea"
-          placeholder="其他旅行需求或想法..."
+          placeholder="如带老人同行、少走路；请勿填写个人敏感信息"
           value="{{form.notes}}"
           bindinput="onInput"
           data-field="notes"
@@ -136,14 +136,18 @@
     </view>
 
     <!-- 底部间距 -->
-    <view style="height: 280rpx;"></view>
+    <view style="height: 420rpx;"></view>
   </view>
 
   <!-- ========== 底部操作栏 ========== -->
   <view class="bottom-bar">
+    <view class="font-xs text-secondary mb-sm">AI 行程最多 {{maxAiDays}} 天。生成时会将旅行表单发送给模型服务，活动建议请自行核实。</view>
     <view class="btn btn-primary btn-block btn-lg generate-btn" bindtap="onGenerateAI" loading="{{generating}}">
       <text wx:if="{{!generating}}">🤖 AI 智能生成行程</text>
       <text wx:else>🤖 AI 正在规划中...</text>
+    </view>
+    <view class="btn btn-secondary btn-block mt-sm" bindtap="onGenerateLocal">
+      使用本地模板
     </view>
     <view class="btn btn-secondary btn-block mt-sm" bindtap="onSubmitManual" disabled="{{generating}}">
       📝 手动创建
@@ -153,7 +157,7 @@
   <!-- 生成中的全屏遮罩 -->
   <view class="generating-mask flex-center flex-col" wx:if="{{generating}}">
     <view class="generating-icon animate-pulse">🤖</view>
-    <view class="generating-title font-lg font-bold text-primary mt-md">AI 正在为您规划行程</view>
+    <view class="generating-title font-lg font-bold text-primary mt-md">{{generating === 'ai' ? 'AI 正在为您规划行程' : '正在生成本地模板'}}</view>
     <view class="generating-desc font-sm text-secondary mt-sm">正在分析目的地、匹配最佳行程...</view>
     <view class="generating-dots mt-md">
       <view class="dot"></view>

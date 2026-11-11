@@ -4,8 +4,8 @@
  */
 const themeBehavior = require('../../utils/theme-behavior')
 const dateUtils = require('../../utils/date-utils')
-const storageUtils = require('../../utils/storage-utils')
 const mockAiService = require('../../services/mock-ai-service')
+const { MAX_AI_DAYS, generateOnlineItinerary, toTripItinerary } = require('../../services/ai-itinerary-service')
 const tripService = require('../../services/trip-service')
 
 Page({
@@ -28,6 +28,7 @@ Page({
     minDate: '',
     // AI 生成中状态
     generating: false,
+    maxAiDays: MAX_AI_DAYS,
 
     // 旅行风格选项
     styleOptions: [
@@ -152,7 +153,7 @@ Page({
     }
 
     const budget = parseFloat(totalBudget)
-    if (!totalBudget || isNaN(budget) || budget <= 0) {
+    if (!totalBudget || !Number.isFinite(budget) || budget <= 0) {
       wx.showToast({ title: '请输入有效的预算金额', icon: 'none' })
       return false
     }
@@ -202,39 +203,45 @@ Page({
    * AI 智能生成行程
    */
   async onGenerateAI() {
-    if (!this._validate()) return
-    if (this.data.generating) return
+    if (this.data.generating || !this._validate()) return
+    const trip = this._buildTripData()
+    if (trip.days > MAX_AI_DAYS) {
+      wx.showToast({ title: `AI 支持最多 ${MAX_AI_DAYS} 天，可使用本地模板`, icon: 'none' })
+      return
+    }
+    await this._generateAndSave(trip, 'ai', generateOnlineItinerary)
+  },
 
-    this.setData({ generating: true })
+  async onGenerateLocal() {
+    if (this.data.generating || !this._validate()) return
+    await this._generateAndSave(this._buildTripData(), 'local', async trip => {
+      const plan = await mockAiService.generateTripPlan({ ...trip, budget: trip.totalBudget })
+      const matches = Array.isArray(plan.itinerary) && plan.itinerary.length === trip.days
+      const days = matches ? plan.itinerary.map(day => ({
+        title: day.title,
+        tips: day.tips,
+        activities: Array.isArray(day.activities)
+          ? day.activities.slice(0, 8).map((name, i) => ({
+            time: `${String(8 + i * 2).padStart(2, '0')}:00`, name
+          }))
+          : [day.morning, day.afternoon, day.evening].reduce((all, group, period) =>
+            all.concat((group || []).slice(0, 4).map((name, i) => ({
+              time: `${String([8, 12, 18][period] + i).padStart(2, '0')}:00`, name
+            }))), [])
+      })) : this._generateDefaultItinerary(trip)
+      return toTripItinerary(days, trip)
+    })
+  },
 
+  async _generateAndSave(trip, source, generate) {
+    this.setData({ generating: source })
     try {
-      const tripData = this._buildTripData()
-
-      // 调用 AI 生成行程
-      if (mockAiService && mockAiService.generateTripPlan) {
-        const plan = await mockAiService.generateTripPlan(tripData)
-        if (plan && plan.itinerary) {
-          tripData.itinerary = plan.itinerary
-        }
-      }
-
-      // 如果没有生成行程，使用默认行程
-      if (!tripData.itinerary || tripData.itinerary.length === 0) {
-        tripData.itinerary = this._generateDefaultItinerary(tripData)
-      }
-
-      this._saveTrip(tripData)
-
-      wx.showToast({ title: '行程生成成功！', icon: 'success' })
-      setTimeout(() => {
-        wx.redirectTo({
-          url: `/pages/trip-detail/trip-detail?tripId=${tripData.id}`
-        })
-      }, 1200)
-
-    } catch (e) {
-      console.error('[创建旅行] AI 生成失败:', e)
-      wx.showToast({ title: '生成失败，请重试', icon: 'none' })
+      trip.itinerary = await generate(trip)
+      trip.itinerarySource = source
+      this._saveTrip(trip)
+      wx.redirectTo({ url: `/pages/trip-detail/trip-detail?tripId=${trip.id}` })
+    } catch (error) {
+      wx.showToast({ title: error.message || '生成失败，请重试', icon: 'none' })
     } finally {
       this.setData({ generating: false })
     }
@@ -244,7 +251,7 @@ Page({
    * 手动创建旅行
    */
   onSubmitManual() {
-    if (!this._validate()) return
+    if (this.data.generating || !this._validate()) return
 
     try {
       const tripData = this._buildTripData()
